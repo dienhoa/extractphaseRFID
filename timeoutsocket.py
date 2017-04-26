@@ -31,7 +31,7 @@ s.connect((remote_ip , port))
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip + ' at port ' + str(port)
  
  
-def recv_timeout(the_socket,timeout=0.7):
+def recv_timeout(the_socket,timeout=1):
     #make socket non blocking
     the_socket.setblocking(0)
      
@@ -50,16 +50,27 @@ def recv_timeout(the_socket,timeout=0.7):
             data = the_socket.recv(8192)
             if data:
                 total_data.append(data)
-                # #change the beginning time for measurement
-                # begin=time.time() # the blocking problem is from here
         except:
             pass
-     
-    #join all parts to make final string
+
     return ''.join(total_data)
  
-#get reply and print
+EPCs, times, RSSIs, counts, ants, freqs, phases_1, phases_2 = ([] for i in range(8))
+recv_timeout(s) # To ignore the first input
 while 1:
-    print recv_timeout(s)
-#Close the socket
+    phases_1 = []
+    phases_2 = []
+    delta_phase = []
+    input_file = recv_timeout(s)
+    if input_file:
+        print input_file
+        for line in input_file.splitlines():
+            EPC, temps, RSSI, count, ant, freq, phase = (item.strip() for item in line.split('\t'))
+            if int(ant) == 1:
+                phases_1.append(int(phase))
+            elif int(ant) == 2:
+                phases_2.append(int(phase))  
+        delta_phase = [a_i - b_i for a_i, b_i in zip(phases_1, phases_2)]
+        print(delta_phase) 
+
 s.close()
