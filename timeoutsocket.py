@@ -58,19 +58,23 @@ def recv_timeout(the_socket,timeout=1):
 EPCs, times, RSSIs, counts, ants, freqs, phases_1, phases_2 = ([] for i in range(8))
 recv_timeout(s) # To ignore the first input
 while 1:
-    phases_1 = []
-    phases_2 = []
-    delta_phase = []
-    input_file = recv_timeout(s)
-    if input_file:
-        print input_file
-        for line in input_file.splitlines():
-            EPC, temps, RSSI, count, ant, freq, phase = (item.strip() for item in line.split('\t'))
-            if int(ant) == 1:
-                phases_1.append(int(phase))
-            elif int(ant) == 2:
-                phases_2.append(int(phase))  
-        delta_phase = [a_i - b_i for a_i, b_i in zip(phases_1, phases_2)]
-        print(delta_phase) 
+    try:
+        phases_1 = []
+        phases_2 = []
+        delta_phase = []
+        input_file = recv_timeout(s)
+        if input_file:
+            print input_file
+            for line in input_file.splitlines():
+                EPC, temps, RSSI, count, ant, freq, phase = (item.strip() for item in line.split('\t'))
+                if int(ant) == 1:
+                    phases_1.append(int(phase))
+                elif int(ant) == 2:
+                    phases_2.append(int(phase))  
+            delta_phase = [a_i - b_i for a_i, b_i in zip(phases_1, phases_2)]
+            print(delta_phase) 
+    except KeyboardInterrupt:
+        print "KeyboardInterrupt"   
+        s.close()
+        break
 
-s.close()
