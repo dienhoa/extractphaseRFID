@@ -4,7 +4,7 @@ import sys  #for exit
 import struct
 import time
 import numpy as np
-
+from math import pow, sqrt
 #create an INET, STREAMing socket
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # default socket family and type, can lelf it blank  
@@ -54,6 +54,7 @@ def recv_timeout(timeout=1):
  
 recv_timeout(0.1) # To ignore the first input
 Y = raw_input('Distance from Tag to antenna in Y: ')
+Y = float(Y)
 raw_input('\nPut the tag to position of 1 antenna to get Initial phase and Press enter to continue: ')
 recv_timeout(0.1)# to flush the previous data
 info_calibrate = recv_timeout(1.5)
@@ -70,12 +71,18 @@ if info_calibrate:
 phase_n_1 = phase_init
 phase_n  = phase_init
 
+C = 2.15 # F1F2 = 2C
+lamda = 34.65 # wave length 3*10^8/865700
+
 while 1:
     command = raw_input(" \n- choose the command (r:read, e:exit) ")
     if command == 'r':
         X = raw_input('Distance from Tag to antenna in X:   ')
-        timestr = time.strftime("%Y%m%d-%H%M%S-")
-        file = open(timestr + 'Y-' + Y + '-X-' + X + '.csv',"w")
+        X = float(X)
+        # Theoretical calculation
+        Distance = sqrt(pow(Y,2)+pow(X,2))-Y
+        Phase_theoretical = 4*180*Distance/lamda
+
         phases = []
         recv_timeout(0.1)# to flush the previous data
         input_file = recv_timeout(1.5)
@@ -87,11 +94,16 @@ while 1:
             print "phase_initial:  " + str(phase_init)
             print "phases - phases_initial:  " + str(phases)
             print "Data Counts: " + str(len(phases))
-            file.write(str(phases)[1:-1])
+            print "Theoretical value of delta phase:  " + str(round(Phase_theoretical))
             print "average delta phase: " + str(int(np.median(phases)))
+            save_data = raw_input('Do you want to save this data: (y:yes,n:no)  ')
+            if save_data=='y':
+                timestr = time.strftime("%Y%m%d-%H%M%S-")
+                file = open(timestr + 'Y-' + Y + '-X-' + X + '.csv',"w")
+                file.write(str(phases)[1:-1])
+                file.close()
     if command == 'e':
         print "\nFinish Getting Data"   
-        file.close()
         s.close()
         break
 
