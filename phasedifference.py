@@ -4,7 +4,8 @@ import socket   #for sockets
 import sys  #for exit
 import struct
 import time
- 
+import numpy as np
+from math import pow, sqrt
 #create an INET, STREAMing socket
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # default socket family and type, can lelf it blank  
@@ -52,14 +53,28 @@ def recv_timeout(timeout=1):
             pass
 
     return ''.join(total_data)
- 
-recv_timeout() # To ignore the first input
+
+C = 2.15 # F1F2 = 2C
+lamda = 34.65 # wave length 3*10^8/865700
+
 while 1:
-    try:
+    command = raw_input(" \n- choose the command (r:read, e:exit) ")
+    if command == 'r':
+        Y = raw_input('Distance from Tag to antenna in Y: ')
+        Y = int(Y)
+        X = raw_input('Distance from Tag to antenna in X: ')
+        X = int(X)
+        # Theoretical Value
+        MF1 = sqrt(pow(Y,2)+pow(X-C,2))
+        MF2 = sqrt(pow(Y,2)+pow(X+C,2))
+        delta_distance_theo = MF1-MF2
+        delta_phase_theo = delta_distance_theo*4*180/lamda
+
         phases_1 = []
         phases_2 = []
         delta_phase = []
-        input_file = recv_timeout(1)
+        recv_timeout(0.1) # Flush the buffer
+        input_file = recv_timeout(3)
         if input_file:
             print input_file
             for line in input_file.splitlines():
@@ -69,11 +84,20 @@ while 1:
                 elif int(ant) == 2:
                     phases_2.append(int(phase))  
             print "phases ant 1: " + str(phases_1)
-            print "phases ant 2: " + str(phases_2)
-            delta_phase = [a_i - b_i for a_i, b_i in zip(phases_1, phases_2)]
+            print "\nphases ant 2: " + str(phases_2)
+            print "\nTheoretial value of delta phase: " + str(round(delta_phase_theo)) + '\n'
+            delta_phase = [a_i - b_i for a_i, b_i in zip(phases_1,  phases_2)]
             print str(len(delta_phase)) + " delta phase: " + str(delta_phase) 
-    except KeyboardInterrupt:
-        print "KeyboardInterrupt"   
+            print "average delta phase: " + str(int(np.median(delta_phase))) + '\n'
+            save_data = raw_input('Do you want to save this data: (y:yes,n:no)  ')
+            if save_data=='y':
+                timestr = time.strftime("%Y%m%d-%H%M%S-")
+                file = open('2ant-' + timestr + 'Y-' + str(Y) + '-X-' + str(X) + '.csv',"w")
+                file.write(str(delta_phase)[1:-1])
+                file.close()
+
+    if command == 'e':
+        print "\nFinish Getting Data"   
         s.close()
         break
 
