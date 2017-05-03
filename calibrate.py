@@ -1,5 +1,4 @@
-#Socket client example in python
- 
+
 import socket   #for sockets
 import sys  #for exit
 import struct
@@ -54,8 +53,8 @@ def recv_timeout(timeout=1):
     return ''.join(total_data)
  
 recv_timeout(0.1) # To ignore the first input
-
-raw_input('\nPut the tag to position of 1 antenna and Press enter to continue: ')
+Y = raw_input('Distance from Tag to antenna in Y: ')
+raw_input('\nPut the tag to position of 1 antenna to get Initial phase and Press enter to continue: ')
 recv_timeout(0.1)# to flush the previous data
 info_calibrate = recv_timeout(1.5)
 if info_calibrate:
@@ -65,17 +64,18 @@ if info_calibrate:
         EPC, temps, RSSI, count, ant, freq, phase = (item.strip() for item in line.split('\t'))
         phases_init.append(int(phase))  
     print "phases_init: " + str(phases_init)
-    phase_init = int(np.mean(phases_init))
+    phase_init = int(np.median(phases_init))
+    print "Data Counts: " + str(len(phases_init))
     print "average of calibrated phase: " + str(phase_init)
-
-raw_input('\nPut the tag to the position you want to calibrate')
-
 phase_n_1 = phase_init
 phase_n  = phase_init
 
 while 1:
     command = raw_input(" \n- choose the command (r:read, e:exit) ")
     if command == 'r':
+        X = raw_input('Distance from Tag to antenna in X:   ')
+        timestr = time.strftime("%Y%m%d-%H%M%S-")
+        file = open(timestr + 'Y-' + Y + '-X-' + X + '.csv',"w")
         phases = []
         recv_timeout(0.1)# to flush the previous data
         input_file = recv_timeout(1.5)
@@ -86,9 +86,12 @@ while 1:
                 phases.append(int(phase)-phase_init)
             print "phase_initial:  " + str(phase_init)
             print "phases - phases_initial:  " + str(phases)
-            print "average delta phase: " + str(int(np.mean(phases)))
+            print "Data Counts: " + str(len(phases))
+            file.write(str(phases)[1:-1])
+            print "average delta phase: " + str(int(np.median(phases)))
     if command == 'e':
-        print "KeyboardInterrupt"   
+        print "\nFinish Getting Data"   
+        file.close()
         s.close()
         break
 
