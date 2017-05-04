@@ -95,7 +95,6 @@ while 1:
                 file = open('2ant-' + timestr + 'Y-' + str(Y) + '-X-' + str(X) + '.csv',"w")
                 file.write(str(delta_phase)[1:-1])
                 file.close()
-
     if command == 'e':
         print "\nFinish Getting Data"   
         s.close()

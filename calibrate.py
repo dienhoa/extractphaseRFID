@@ -73,7 +73,7 @@ phase_n_1 = phase_init
 phase_n  = phase_init
 
 C = 2.15 # F1F2 = 2C
-lamda = 34.65 # wave length 3*10^8/865700
+lamda = 32.0 # wave length 3*10^8/865700 34.65
 
 while 1:
     command = raw_input(" \n- choose the command (r:read, e:exit) ")
@@ -83,7 +83,7 @@ while 1:
         # Theoretical calculation
         Distance = sqrt(pow(Y,2)+pow(X,2))-Y
         Phase_theoretical = 4*180*Distance/lamda
-
+        delta_phases = []
         phases = []
         recv_timeout(0.1)# to flush the previous data
         input_file = recv_timeout(1.5)
@@ -91,17 +91,21 @@ while 1:
             print input_file
             for line in input_file.splitlines():
                 EPC, temps, RSSI, count, ant, freq, phase = (item.strip() for item in line.split('\t'))
-                phases.append(int(phase)-phase_init)
+                phases.append(int(phase))
+                delta_phases.append(int(phase)-phase_init)
             print "phase_initial:  " + str(phase_init)
-            print "phases - phases_initial:  " + str(phases)
-            print "Data Counts: " + str(len(phases))
+            print "phases - phases_initial:  " + str(delta_phases)
+            print "Data Counts: " + str(len(delta_phases))
             print "Theoretical value of delta phase:  " + str(round(Phase_theoretical))
-            print "average delta phase: " + str(int(np.median(phases)))
+            print "average delta phase: " + str(int(np.median(delta_phases)))
             save_data = raw_input('Do you want to save this data: (y:yes,n:no)  ')
             if save_data=='y':
                 timestr = time.strftime("%Y%m%d-%H%M%S-")
                 file = open('1ant-' + timestr + 'Y-' + str(Y) + '-X-' + str(X) + '.csv',"w")
-                file.write(str(phases)[1:-1])
+                file.write('phases, ' + str(phases)[1:-1] + '\n')
+                file.write('phases_initial, '+ str(phase_init) + '\n')
+                file.write('Theoretical, ' + str(round(Phase_theoretical)) + '\n')
+                file.write('delta_phase, ' + str(delta_phases)[1:-1])
                 file.close()
     if command == 'e':
         print "\nFinish Getting Data"   
