@@ -105,6 +105,7 @@ while 1:
                 file.write('phases, ' + str(phases)[1:-1] + '\n')
                 file.write('phases_initial, '+ str(phase_init) + '\n')
                 file.write('Theoretical, ' + str(round(Phase_theoretical)) + '\n')
+                file.write('average delta phase, ' + str(int(np.median(delta_phases)) + '\n')
                 file.write('delta_phase, ' + str(delta_phases)[1:-1])
                 file.close()
     if command == 'e':
